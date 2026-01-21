@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/admin_login_screen.dart';
+import '../../screens/login_screen.dart';
 import '../../theme/app_theme.dart';
 
 /// Admin Entry Point
@@ -18,7 +18,7 @@ class AdminEntryPoint {
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const AdminLoginScreen(),
+            const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

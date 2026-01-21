@@ -123,6 +123,25 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
           pinned: true,
           backgroundColor: AppTheme.primaryBlue,
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: GestureDetector(
+            onTap: () {
+              final nav = Navigator.of(context);
+              if (nav.canPop()) nav.popUntil((r) => r.isFirst);
+            },
+            child: Image.asset(
+              'assets/images/logo.jpg',
+              height: 24,
+              fit: BoxFit.contain,
+            ),
+          ),
           flexibleSpace: FlexibleSpaceBar(background: _buildHeader()),
         ),
 

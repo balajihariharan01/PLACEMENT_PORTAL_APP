@@ -231,7 +231,7 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                   label: 'Department',
                   isRequired: true,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedDepartment,
+                    initialValue: _selectedDepartment,
                     decoration: InputDecoration(
                       hintText: 'Select department',
                       border: OutlineInputBorder(
@@ -264,7 +264,7 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                   label: 'Year',
                   isRequired: true,
                   child: DropdownButtonFormField<int>(
-                    value: _selectedYear,
+                    initialValue: _selectedYear,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: AppTheme.mediumRadius,

@@ -8,6 +8,7 @@ import '../widgets/dialogs.dart';
 import '../security/admin_route_guard.dart';
 import 'student_form_screen.dart';
 import 'student_details_screen.dart';
+import '../../widgets/branded_header.dart';
 
 /// Student Management Screen
 /// SECURITY: Protected by AdminRouteGuard
@@ -133,24 +134,23 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      appBar: AppBar(
-        title: const Text('Student Management'),
-        backgroundColor: AppTheme.primaryBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddStudent,
-        backgroundColor: AppTheme.primaryBlue,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add Student', style: TextStyle(color: Colors.white)),
-      ),
       body: SafeArea(
         child: Column(
           children: [
+            BrandedHeader(
+              title: 'Student Directory',
+              subtitle: 'Manage student profiles and placement status',
+              showBackButton: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded),
+                  onPressed: _loadStudents,
+                ),
+              ],
+            ),
             // Search and Filter Section
             Container(
-              color: AppTheme.primaryBlue,
+              color: Colors.white,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -158,7 +158,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   // Search Bar
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.grey[100],
                       borderRadius: AppTheme.mediumRadius,
                     ),
                     child: TextField(
@@ -248,23 +248,24 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: AppTheme.errorRed.withValues(alpha: 0.1),
                                 borderRadius: AppTheme.pillRadius,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(
                                     Icons.clear,
                                     size: 14,
-                                    color: Colors.white,
+                                    color: AppTheme.errorRed,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
                                     'Clear',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: AppTheme.errorRed,
                                       fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
@@ -288,6 +289,12 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _navigateToAddStudent,
+        backgroundColor: AppTheme.primaryBlue,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Add Student', style: TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -354,8 +361,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 _selectedStatus != null
             ? 'Try adjusting your search or filters'
             : 'Add your first student to get started',
-        actionText: 'Add Student',
-        onAction: _navigateToAddStudent,
+        buttonText: 'Add Student',
+        onButtonPressed: _navigateToAddStudent,
       );
     }
 

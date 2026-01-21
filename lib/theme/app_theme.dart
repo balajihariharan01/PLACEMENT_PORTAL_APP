@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 /// Centralized theme & color management with gradients and modern styling
 class AppTheme {
   // ========== PRIMARY COLORS ==========
-  static const Color primaryBlue = Color(0xFF1976D2);
-  static const Color primaryDark = Color(0xFF1565C0);
-  static const Color primaryLight = Color(0xFF42A5F5);
-  static const Color accentColor = Color(0xFF00BFA5);
+  static const Color primaryBlue = Color(0xFF007DC5);
+  static const Color primaryDark = Color(0xFF005A8D);
+  static const Color primaryLight = Color(0xFF3397D1);
+  static const Color accentColor = Color(0xFF8CC63F);
 
   // ========== BACKGROUND COLORS ==========
   static const Color scaffoldLight = Color(0xFFF5F9FA);
@@ -25,19 +25,14 @@ class AppTheme {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1976D2), Color(0xFF42A5F5), Color(0xFF64B5F6)],
+    colors: [Color(0xFF007DC5), Color(0xFF8CC63F)],
   );
 
   static const LinearGradient headerGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF87CEEB),
-      Color(0xFFB0E0E6),
-      Color(0xFFE0F7FA),
-      Colors.white,
-    ],
-    stops: [0.0, 0.3, 0.6, 1.0],
+    colors: [Color(0xFFE3F2FD), Color(0xFFF1F8E9), Colors.white],
+    stops: [0.0, 0.5, 1.0],
   );
 
   static const LinearGradient cardGradient = LinearGradient(
@@ -97,36 +92,66 @@ class AppTheme {
   static const Curve bounceCurve = Curves.elasticOut;
   static const Curve smoothCurve = Curves.easeInOutCubic;
 
-  // ========== TEXT STYLES ==========
+  // ========== SPACING & PADDING ==========
+  static const double horizontalPadding = 20.0;
+  static const double verticalPadding = 16.0;
+  static const double cardMargin = 12.0;
+  static const double itemSpacing = 16.0;
+
+  // ========== TEXT STYLES (STRICT HIERARCHY) ==========
   static const TextStyle headingLarge = TextStyle(
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: FontWeight.bold,
     color: Color(0xFF1A1A1A),
     letterSpacing: -0.5,
+    height: 1.2,
   );
 
   static const TextStyle headingMedium = TextStyle(
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: FontWeight.bold,
+    color: Color(0xFF1A1A1A),
+    height: 1.3,
+  );
+
+  static const TextStyle headingSmall = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
     color: Color(0xFF1A1A1A),
   );
 
   static const TextStyle bodyLarge = TextStyle(
     fontSize: 16,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w400,
     color: Color(0xFF333333),
+    height: 1.5,
   );
 
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w400,
     color: Color(0xFF666666),
+    height: 1.4,
+  );
+
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: Color(0xFF757575),
   );
 
   static const TextStyle caption = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+    color: Color(0xFF9E9E9E),
+    letterSpacing: 0.2,
+  );
+
+  static const TextStyle labelBold = TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.normal,
-    color: Color(0xFF999999),
+    fontWeight: FontWeight.bold,
+    color: Color(0xFF1A1A1A),
+    letterSpacing: 0.5,
   );
 
   // ========== THEME DATA ==========
@@ -135,7 +160,7 @@ class AppTheme {
     brightness: Brightness.light,
     primaryColor: primaryBlue,
     scaffoldBackgroundColor: scaffoldLight,
-    fontFamily: 'Roboto',
+    fontFamily: 'Inter', // Modern font
     colorScheme: ColorScheme.light(
       primary: primaryBlue,
       secondary: accentColor,
@@ -143,13 +168,14 @@ class AppTheme {
       error: errorRed,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       elevation: 0,
-      iconTheme: IconThemeData(color: Colors.black87),
+      centerTitle: false,
+      iconTheme: IconThemeData(color: Color(0xFF1A1A1A)),
       titleTextStyle: TextStyle(
-        color: Colors.black87,
+        color: Color(0xFF1A1A1A),
         fontSize: 18,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.bold,
       ),
     ),
     cardTheme: CardThemeData(

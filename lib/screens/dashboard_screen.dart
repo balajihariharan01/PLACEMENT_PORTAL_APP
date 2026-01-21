@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/drive_card.dart';
 import '../widgets/animated_widgets.dart';
 import '../theme/app_theme.dart';
 import 'placed_drives_tab.dart';
 import 'profile_screen.dart';
 import '../widgets/no_data_widget.dart';
+import '../widgets/branded_header.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,16 +20,30 @@ class _DashboardScreenState extends State<DashboardScreen>
   int _selectedIndex = 0;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  DateTime? _lastBackPressTime;
+
+  Future<bool> _handleBackPress() async {
+    final now = DateTime.now();
+    if (_lastBackPressTime == null ||
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Press back again to exit'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
 
   // -- Drives Tab Data --
   String _drivesSelectedTab = "All";
-  final List<String> _drivesTabs = [
-    "Opened (0)",
-    "All (0)",
-    "Not Eligible (0)",
-    "Reopened (0)",
-    "OnHold (0)",
-  ];
+  final List<String> _drivesTabs = ["Opened", "All", "Eligible", "Applied"];
 
   final List<Map<String, dynamic>> _drives = [];
 
@@ -63,157 +79,60 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      appBar: _selectedIndex == 2
-          ? null // No app bar for profile (has its own header)
-          : AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              automaticallyImplyLeading: false,
-              title: _buildPremiumTitle(),
-              actions: [
-                _buildAnimatedIconButton(
-                  icon: Icons.qr_code_scanner,
-                  onPressed: () => _showSnackBar('QR Scanner'),
-                ),
-                _buildAnimatedIconButton(
-                  icon: Icons.search,
-                  onPressed: () => _showSnackBar('Search'),
-                ),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    _buildAnimatedIconButton(
-                      icon: Icons.notifications_none,
-                      onPressed: () => _showSnackBar('Notifications'),
-                    ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: AppTheme.slowDuration,
-                        curve: Curves.elasticOut,
-                        builder: (context, value, child) {
-                          return Transform.scale(scale: value, child: child);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: const Text(
-                            '1',
-                            style: TextStyle(color: Colors.white, fontSize: 10),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final shouldPop = await _handleBackPress();
+          if (shouldPop && mounted) {
+            SystemNavigator.pop();
+          }
+        },
+        child: SafeArea(
+          child: Column(
+            children: [
+              if (_selectedIndex != 2)
+                BrandedHeader(
+                  title: _selectedIndex == 0
+                      ? 'Placement Drives'
+                      : 'My Successes',
+                  subtitle: _selectedIndex == 0
+                      ? 'Discover top career opportunities'
+                      : 'Track your career milestones',
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.search_rounded),
+                        onPressed: () {},
                       ),
-                    ),
-                  ],
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none_rounded),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 10),
-              ],
-            ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            _buildDrivesTab(),
-            const PlacedDrivesTab(),
-            const ProfileScreen(),
-          ],
+              Expanded(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: [
+                      _buildDrivesTab(),
+                      const PlacedDrivesTab(),
+                      const ProfileScreen(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _selectedIndex,
         onTap: _onTabChanged,
-      ),
-    );
-  }
-
-  Widget _buildAnimatedIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 1.0, end: 1.0),
-      duration: AppTheme.fastDuration,
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: IconButton(
-        icon: Icon(icon, color: Colors.black),
-        onPressed: onPressed,
-        splashRadius: 24,
-      ),
-    );
-  }
-
-  Widget _buildPremiumTitle() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: AppTheme.slowDuration,
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(-20 * (1 - value), 0),
-            child: child,
-          ),
-        );
-      },
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: AppTheme.primaryGradient,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryBlue.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 10),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Placement Portal',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                'Find your dream career',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -327,18 +246,6 @@ class _DashboardScreenState extends State<DashboardScreen>
           );
         },
         child: const NoDataWidget(),
-      ),
-    );
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$message tapped (UI only)'),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 1),
       ),
     );
   }

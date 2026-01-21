@@ -6,16 +6,19 @@
 /// - All routes are protected by AdminRouteGuard
 /// - Session management is handled by AdminSessionManager
 /// - Entry points are restricted and hidden
+library;
 
 // Models
 export 'models/admin_user.dart';
 export 'models/drive.dart';
 export 'models/dashboard_stats.dart';
+export 'models/student.dart';
 
 // Services
 export 'services/admin_auth_service.dart';
 export 'services/drive_service.dart';
 export 'services/dashboard_service.dart';
+export 'services/student_service.dart';
 
 // Security (Core)
 export 'security/admin_session_manager.dart';
@@ -27,13 +30,17 @@ export 'widgets/admin_text_field.dart';
 export 'widgets/admin_button.dart';
 export 'widgets/stats_card.dart';
 export 'widgets/admin_drive_card.dart';
+export 'widgets/student_card.dart';
 export 'widgets/state_widgets.dart';
 export 'widgets/dialogs.dart';
 
 // Screens
-export 'screens/admin_login_screen.dart';
 export 'screens/admin_dashboard_screen.dart';
 export 'screens/drive_management_screen.dart';
 export 'screens/drive_form_screen.dart';
 export 'screens/drive_details_screen.dart';
+export 'screens/student_management_screen.dart';
+export 'screens/student_form_screen.dart';
+export 'screens/student_details_screen.dart';
+export 'screens/calendar_screen.dart';
 export 'screens/unauthorized_screen.dart';

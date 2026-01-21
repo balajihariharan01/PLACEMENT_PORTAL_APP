@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_text_field.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
+import '../admin/screens/admin_dashboard_screen.dart';
+import '../admin/security/admin_route_guard.dart';
 import 'dashboard_screen.dart';
+import '../widgets/student_route_guard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,14 +17,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
   int _step = 0; // 0: Email, 1: Password
-  final TextEditingController _emailController = TextEditingController(
-    text: "student@college.edu",
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: "123456",
-  );
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  // Authentication service
+  final _authService = AuthService();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -83,40 +86,117 @@ class _LoginScreenState extends State<LoginScreen>
     _slideController.forward();
   }
 
+  /// Handle Login with Role-Based Redirection
+  /// CRITICAL: Admin users MUST be redirected to Admin Dashboard
+  ///           Student users MUST be redirected to Student Dashboard
   void _handleLogin() async {
-    setState(() => _isLoading = true);
+    // Clear any previous error
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Simulate loading for UI demo
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Authenticate using unified auth service
+    final result = await _authService.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const DashboardScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position:
-                    Tween<Offset>(
-                      begin: const Offset(0.05, 0),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: AppTheme.defaultCurve,
-                      ),
-                    ),
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: AppTheme.normalDuration,
-        ),
-      );
+    if (!mounted) return;
+
+    setState(() => _isLoading = false);
+
+    if (!result.success) {
+      // Show error message
+      setState(() {});
+      _showErrorSnackBar(result.errorMessage ?? 'Authentication failed');
+      return;
     }
+
+    // CRITICAL: Role-based navigation
+    if (result.isAdmin) {
+      // Admin user -> Navigate to Admin Dashboard
+      _navigateToAdminDashboard();
+    } else if (result.isStudent) {
+      // Student user -> Navigate to Student Dashboard
+      _navigateToStudentDashboard();
+    } else {
+      // Unknown role -> Show error
+      _showErrorSnackBar('Unable to determine user role');
+    }
+  }
+
+  /// Navigate to Admin Dashboard with protected route
+  void _navigateToAdminDashboard() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            // Wrap with AdminRouteGuard for extra security
+            AdminRouteGuard(child: const AdminDashboardScreen()),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0.05, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: AppTheme.defaultCurve,
+                    ),
+                  ),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: AppTheme.normalDuration,
+      ),
+    );
+  }
+
+  /// Navigate to Student Dashboard
+  void _navigateToStudentDashboard() {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const StudentRouteGuard(child: DashboardScreen()),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0.05, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: AppTheme.defaultCurve,
+                    ),
+                  ),
+              child: child,
+            ),
+          );
+        },
+        transitionDuration: AppTheme.normalDuration,
+      ),
+    );
+  }
+
+  /// Show error message in snackbar
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.errorRed,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
@@ -225,9 +305,7 @@ class _LoginScreenState extends State<LoginScreen>
                               ),
                             );
                           },
-                          child: _step == 0
-                              ? _buildNeoPatLogo()
-                              : _buildCollegeLogo(),
+                          child: _buildLogo(),
                         ),
                       ),
                       const SizedBox(height: 40),
@@ -305,104 +383,26 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildNeoPatLogo() {
+  Widget _buildLogo() {
     return TweenAnimationBuilder<double>(
-      key: const ValueKey('neopat'),
       tween: Tween(begin: 0.8, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.elasticOut,
+      duration: const Duration(milliseconds: 800),
+      curve: AppTheme.bounceCurve,
       builder: (context, value, child) {
         return Transform.scale(scale: value, child: child);
       },
       child: Container(
-        width: 100,
-        height: 100,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primaryBlue.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          boxShadow: AppTheme.elevatedShadow,
         ),
-        alignment: Alignment.center,
-        child: RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'neo',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'sans-serif',
-                ),
-              ),
-              WidgetSpan(
-                child: Padding(
-                  padding: EdgeInsets.only(left: 2.0),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFFFF4081), Color(0xFFFF6B9D)],
-                      ),
-                      borderRadius: BorderRadius.all(Radius.circular(4)),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 4.0,
-                        vertical: 2.0,
-                      ),
-                      child: Text(
-                        'PAT',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCollegeLogo() {
-    return TweenAnimationBuilder<double>(
-      key: const ValueKey('college'),
-      tween: Tween(begin: 0.8, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: Container(
-        width: 120,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.successGreen.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16.0),
-        child: Icon(
-          Icons.school_rounded,
-          size: 50,
-          color: AppTheme.primaryBlue,
+        child: Image.asset(
+          'assets/images/logo.jpg',
+          width: 140,
+          height: 140,
+          fit: BoxFit.contain,
         ),
       ),
     );

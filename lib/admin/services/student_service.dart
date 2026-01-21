@@ -126,7 +126,7 @@ class StudentService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/students
   /// Query params: department, year, status, search, page, limit
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<List<Student>>> getAllStudents({
     String? department,
     int? year,
@@ -174,7 +174,7 @@ class StudentService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/students/:id
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Student>> getStudentById(String id) async {
     await Future.delayed(_networkDelay);
 
@@ -195,7 +195,7 @@ class StudentService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: POST /api/admin/students
   /// Body: Student JSON
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Student>> createStudent(Student student) async {
     await Future.delayed(_networkDelay);
 
@@ -240,7 +240,7 @@ class StudentService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: PUT /api/admin/students/:id
   /// Body: Student JSON
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Student>> updateStudent(Student student) async {
     await Future.delayed(_networkDelay);
 
@@ -262,7 +262,7 @@ class StudentService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: DELETE /api/admin/students/:id
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<void>> deleteStudent(String id) async {
     await Future.delayed(_networkDelay);
 
@@ -280,7 +280,7 @@ class StudentService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/students/stats
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Map<String, int>>> getStudentStats() async {
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -308,7 +308,7 @@ class StudentService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: POST /api/admin/students/:id/assign-drive
   /// Body: { driveId: string }
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Student>> assignToDrive(
     String studentId,
     String driveId,

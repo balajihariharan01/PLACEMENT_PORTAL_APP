@@ -7,6 +7,7 @@ import '../widgets/state_widgets.dart';
 import '../widgets/dialogs.dart';
 import 'drive_form_screen.dart';
 import 'drive_details_screen.dart';
+import '../../widgets/branded_header.dart';
 
 /// Drive Management Screen
 /// List view with filtering, search, and CRUD operations
@@ -180,133 +181,128 @@ class _DriveManagementScreenState extends State<DriveManagementScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Drive Management',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black87),
-            onPressed: _loadDrives,
-          ),
-        ],
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Column(
-          children: [
-            // Search and Filter Section
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Search Bar
-                  TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() => _searchQuery = value);
-                      // Debounced search
-                      Future.delayed(const Duration(milliseconds: 500), () {
-                        if (_searchQuery == value) {
-                          _loadDrives();
-                        }
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Search drives...',
-                      hintStyle: TextStyle(color: Colors.grey[400]),
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                                _loadDrives();
-                              },
-                            )
-                          : null,
-                      filled: true,
-                      fillColor: Colors.grey[50],
-                      border: OutlineInputBorder(
-                        borderRadius: AppTheme.pillRadius,
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Filter Chips
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFilterChip('All', null),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('Active', DriveStatus.active),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('Upcoming', DriveStatus.upcoming),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('Closed', DriveStatus.closed),
-                        const SizedBox(width: 8),
-                        _buildFilterChip('On Hold', DriveStatus.onHold),
-                      ],
-                    ),
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            children: [
+              BrandedHeader(
+                title: 'Drive Management',
+                subtitle: 'Manage and track recruitment drives',
+                showBackButton: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    onPressed: _loadDrives,
                   ),
                 ],
               ),
-            ),
-
-            // Drives List
-            Expanded(
-              child: _isLoading
-                  ? _buildLoadingState()
-                  : _error != null
-                  ? ErrorStateWidget(message: _error!, onRetry: _loadDrives)
-                  : _drives.isEmpty
-                  ? EmptyStateWidget(
-                      icon: Icons.campaign_outlined,
-                      title: 'No drives found',
-                      subtitle: _searchQuery.isNotEmpty
-                          ? 'Try a different search term'
-                          : 'Create your first drive to get started',
-                      buttonText: 'Add Drive',
-                      onButtonPressed: () => _navigateToForm(),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadDrives,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        physics: const AlwaysScrollableScrollPhysics(
-                          parent: BouncingScrollPhysics(),
+              // Search and Filter Section
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Search Bar
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() => _searchQuery = value);
+                        // Debounced search
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (_searchQuery == value) {
+                            _loadDrives();
+                          }
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search drives...',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                  _loadDrives();
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: AppTheme.pillRadius,
+                          borderSide: BorderSide.none,
                         ),
-                        itemCount: _drives.length,
-                        itemBuilder: (context, index) {
-                          final drive = _drives[index];
-                          return AdminDriveCard(
-                            drive: drive,
-                            animationIndex: index,
-                            onTap: () => _navigateToDetails(drive),
-                            onEdit: () => _navigateToForm(drive: drive),
-                            onDelete: () => _handleDeleteDrive(drive),
-                          );
-                        },
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
                       ),
                     ),
-            ),
-          ],
+                    const SizedBox(height: 12),
+
+                    // Filter Chips
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChip('All', null),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('Active', DriveStatus.active),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('Upcoming', DriveStatus.upcoming),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('Closed', DriveStatus.closed),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('On Hold', DriveStatus.onHold),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Drives List
+              Expanded(
+                child: _isLoading
+                    ? _buildLoadingState()
+                    : _error != null
+                    ? ErrorStateWidget(message: _error!, onRetry: _loadDrives)
+                    : _drives.isEmpty
+                    ? EmptyStateWidget(
+                        icon: Icons.campaign_outlined,
+                        title: 'No drives found',
+                        subtitle: _searchQuery.isNotEmpty
+                            ? 'Try a different search term'
+                            : 'Create your first drive to get started',
+                        buttonText: 'Add Drive',
+                        onButtonPressed: () => _navigateToForm(),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _loadDrives,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics(),
+                          ),
+                          itemCount: _drives.length,
+                          itemBuilder: (context, index) {
+                            final drive = _drives[index];
+                            return AdminDriveCard(
+                              drive: drive,
+                              animationIndex: index,
+                              onTap: () => _navigateToDetails(drive),
+                              onEdit: () => _navigateToForm(drive: drive),
+                              onDelete: () => _handleDeleteDrive(drive),
+                            );
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

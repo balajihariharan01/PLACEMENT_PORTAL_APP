@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import 'package:flutter/services.dart';
 import '../models/dashboard_stats.dart';
 import '../services/admin_auth_service.dart';
 import '../services/dashboard_service.dart';
-import '../services/student_service.dart';
 import '../security/admin_route_guard.dart';
+import '../../utils/logout_helper.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/state_widgets.dart';
-import '../widgets/dialogs.dart';
 import 'drive_management_screen.dart';
 import 'student_management_screen.dart';
 import 'calendar_screen.dart';
-import 'admin_login_screen.dart';
+
+import '../../widgets/branded_header.dart';
 
 /// Admin Dashboard Screen
 /// SECURITY: Protected by AdminRouteGuard - requires valid admin session
@@ -34,6 +35,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  DateTime? _lastBackPressTime;
+
+  Future<bool> _handleBackPress() async {
+    final now = DateTime.now();
+    if (_lastBackPressTime == null ||
+        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+      _lastBackPressTime = now;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Press back again to exit'),
+          backgroundColor: Colors.black87,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
 
   @override
   void initState() {
@@ -91,279 +112,192 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   Future<void> _handleLogout() async {
-    final confirmed = await ConfirmationDialog.show(
-      context: context,
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      confirmText: 'Logout',
-      icon: Icons.logout,
-    );
-
-    if (confirmed == true) {
-      await _authService.logout();
-      if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const AdminLoginScreen()),
-        (route) => false,
-      );
-    }
+    await LogoutHelper.logout(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    // MOBILE-FIRST: Calculate responsive header height
-    final screenHeight = MediaQuery.of(context).size.height;
-    final headerHeight = screenHeight < 700 ? 160.0 : 180.0;
-
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // App Bar with responsive height
-            SliverAppBar(
-              expandedHeight: headerHeight,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              flexibleSpace: FlexibleSpaceBar(background: _buildHeader()),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notifications coming soon'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.mediumRadius,
-                  ),
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      _handleLogout();
-                    } else if (value == 'settings') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Settings coming soon'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'settings',
-                      child: Row(
-                        children: [
-                          Icon(Icons.settings_outlined, size: 20),
-                          SizedBox(width: 12),
-                          Text('Settings'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, size: 20, color: Colors.red),
-                          SizedBox(width: 12),
-                          Text('Logout', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            // Content
-            if (_isLoading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (_error != null)
-              SliverFillRemaining(
-                child: ErrorStateWidget(
-                  message: _error!,
-                  onRetry: _loadDashboardData,
-                ),
-              )
-            else ...[
-              // Stats Grid
-              SliverPadding(
-                padding: const EdgeInsets.all(20),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Overview',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildStatsGrid(),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Quick Actions
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Quick Actions',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildQuickActions(),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Recent Activities
-              SliverPadding(
-                padding: const EdgeInsets.all(20),
-                sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Recent Activity',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final shouldPop = await _handleBackPress();
+          if (shouldPop && mounted) {
+            SystemNavigator.pop();
+          }
+        },
+        child: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _loadDashboardData,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: 200,
+                    pinned: true,
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.white,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: BrandedHeader(
+                        title: 'Admin Console',
+                        subtitle: 'Centralized management & analytics',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.notifications_none_rounded,
+                              ),
+                              onPressed: () {},
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: const Text('View All'),
-                          ),
-                        ],
+                            _buildUserMenu(),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      _buildActivityList(),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              // Bottom Padding
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-            ],
-          ],
+                  // Content
+                  if (_isLoading)
+                    const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_error != null)
+                    SliverFillRemaining(
+                      child: ErrorStateWidget(
+                        message: _error!,
+                        onRetry: _loadDashboardData,
+                      ),
+                    )
+                  else ...[
+                    // Overview Section
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Performance Overview',
+                              style: AppTheme.headingSmall.copyWith(
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildStatsGrid(),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quick Actions',
+                              style: AppTheme.headingSmall.copyWith(
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildQuickActions(),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Recent Activity',
+                              style: AppTheme.headingSmall.copyWith(
+                                color: AppTheme.primaryBlue,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildActivityList(),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 40)),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+  Widget _buildUserMenu() {
+    return PopupMenuButton<String>(
+      icon: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.person_rounded,
+          size: 22,
+          color: AppTheme.primaryBlue,
         ),
       ),
-      child: SafeArea(
-        child: Padding(
-          // Reduced padding for mobile
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.largeRadius),
+      offset: const Offset(0, 48),
+      onSelected: (value) {
+        if (value == 'logout') _handleLogout();
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          enabled: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          'Welcome back!',
-                          style: TextStyle(fontSize: 13, color: Colors.white70),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _authService.currentAdmin?.name ?? 'Admin User',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                _authService.currentAdmin?.name ?? 'Admin',
+                style: AppTheme.labelBold,
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: AppTheme.pillRadius,
-                ),
-                child: Text(
-                  _authService.currentAdmin?.role ?? 'Administrator',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+              Text(
+                _authService.currentAdmin?.email ?? 'admin@college.edu',
+                style: AppTheme.caption,
               ),
+              const Divider(),
             ],
           ),
         ),
-      ),
+        const PopupMenuItem(
+          value: 'settings',
+          child: Row(
+            children: [
+              Icon(Icons.settings_outlined, size: 20),
+              SizedBox(width: 12),
+              Text('System Settings'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, size: 20, color: AppTheme.errorRed),
+              SizedBox(width: 12),
+              Text('Sign Out', style: TextStyle(color: AppTheme.errorRed)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -454,26 +388,19 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             VerticalDivider(width: 1, thickness: 1, color: Colors.grey[200]),
             Expanded(
               child: _buildQuickActionItem(
-                Icons.list_alt,
-                'All Drives',
+                Icons.school_outlined,
+                'Students',
                 AppTheme.successGreen,
-                () => _navigateToDrives(),
+                _navigateToStudents,
               ),
             ),
             VerticalDivider(width: 1, thickness: 1, color: Colors.grey[200]),
             Expanded(
               child: _buildQuickActionItem(
-                Icons.analytics_outlined,
-                'Reports',
+                Icons.calendar_month,
+                'Calendar',
                 AppTheme.warningOrange,
-                () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Reports coming soon'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
+                _navigateToCalendar,
               ),
             ),
           ],
@@ -670,5 +597,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
       context,
       DriveManagementScreen(openAddForm: addNew),
     );
+  }
+
+  void _navigateToStudents() {
+    // SECURITY: Use protected route navigation
+    AdminRouteMiddleware.navigateTo(context, const StudentManagementScreen());
+  }
+
+  void _navigateToCalendar() {
+    // SECURITY: Use protected route navigation
+    AdminRouteMiddleware.navigateTo(context, const CalendarScreen());
   }
 }

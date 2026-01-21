@@ -137,7 +137,7 @@ class AdminAuthService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: POST /api/admin/logout
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<void>> logout() async {
     await Future.delayed(const Duration(milliseconds: 300));
 
@@ -154,7 +154,7 @@ class AdminAuthService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/verify-token
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<AdminUser>> verifySession() async {
     await Future.delayed(const Duration(milliseconds: 500));
 

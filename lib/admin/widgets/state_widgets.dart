@@ -157,13 +157,13 @@ class ErrorStateWidget extends StatelessWidget {
 /// Loading Skeleton Widget
 /// Shows shimmer effect while loading
 class LoadingSkeleton extends StatefulWidget {
-  final double width;
+  final double? width;
   final double height;
   final BorderRadius? borderRadius;
 
   const LoadingSkeleton({
     super.key,
-    required this.width,
+    this.width,
     required this.height,
     this.borderRadius,
   });

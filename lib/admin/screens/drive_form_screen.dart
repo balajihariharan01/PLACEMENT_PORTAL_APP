@@ -5,6 +5,7 @@ import '../services/drive_service.dart';
 import '../widgets/admin_text_field.dart';
 import '../widgets/admin_button.dart';
 import '../widgets/dialogs.dart';
+import '../../widgets/branded_header.dart';
 
 /// Drive Form Screen
 /// Create or edit a placement drive
@@ -182,19 +183,10 @@ class _DriveFormScreenState extends State<DriveFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          _isEditing ? 'Edit Drive' : 'Add New Drive',
-          style: const TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: SubPageHeader(
+          title: _isEditing ? 'Edit Drive' : 'Add New Drive',
         ),
       ),
       body: Form(

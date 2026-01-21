@@ -123,7 +123,7 @@ class DriveService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/drives
   /// Query params: status, page, limit, search
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<List<Drive>>> getAllDrives({
     DriveStatus? status,
     String? searchQuery,
@@ -159,7 +159,7 @@ class DriveService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/drives/:id
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Drive>> getDriveById(String id) async {
     await Future.delayed(_networkDelay);
 
@@ -180,7 +180,7 @@ class DriveService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: POST /api/admin/drives
   /// Body: Drive JSON
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Drive>> createDrive(Drive drive) async {
     await Future.delayed(_networkDelay);
 
@@ -209,7 +209,7 @@ class DriveService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: PUT /api/admin/drives/:id
   /// Body: Drive JSON
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Drive>> updateDrive(Drive drive) async {
     await Future.delayed(_networkDelay);
 
@@ -231,7 +231,7 @@ class DriveService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: DELETE /api/admin/drives/:id
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<void>> deleteDrive(String id) async {
     await Future.delayed(_networkDelay);
 
@@ -250,7 +250,7 @@ class DriveService {
   /// TODO: Integrate with actual backend API
   /// Endpoint: PATCH /api/admin/drives/:id/status
   /// Body: { status: string }
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Drive>> updateDriveStatus(
     String id,
     DriveStatus status,
@@ -278,7 +278,7 @@ class DriveService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/drives/stats
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Map<String, int>>> getDriveStats() async {
     await Future.delayed(const Duration(milliseconds: 400));
 

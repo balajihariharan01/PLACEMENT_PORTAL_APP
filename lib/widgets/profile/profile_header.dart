@@ -77,10 +77,23 @@ class _ProfileHeaderState extends State<ProfileHeader>
             },
             child: Column(
               children: [
-                // Logout Icon Row
-                Align(
-                  alignment: Alignment.topRight,
-                  child: _buildAnimatedLogoutButton(),
+                // Top Row: Logo & Logout
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        final nav = Navigator.of(context);
+                        if (nav.canPop()) nav.popUntil((r) => r.isFirst);
+                      },
+                      child: Image.asset(
+                        'assets/images/logo.jpg',
+                        height: 24,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    _buildAnimatedLogoutButton(),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 // Profile Row

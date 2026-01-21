@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -30,7 +31,9 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const LoginScreen(),
+      home: const SplashScreen(),
+      // Named routes for navigation
+      routes: {'/login': (context) => const LoginScreen()},
       // Page transitions
       builder: (context, child) {
         return ScrollConfiguration(

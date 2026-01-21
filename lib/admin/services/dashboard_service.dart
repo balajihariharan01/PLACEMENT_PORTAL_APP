@@ -12,7 +12,7 @@ class DashboardService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/dashboard/stats
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<DashboardStats>> getDashboardStats() async {
     await Future.delayed(_networkDelay);
 
@@ -34,7 +34,7 @@ class DashboardService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/dashboard/activities
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<List<Map<String, dynamic>>>> getRecentActivities() async {
     await Future.delayed(_networkDelay);
 
@@ -84,7 +84,7 @@ class DashboardService {
   ///
   /// TODO: Integrate with actual backend API
   /// Endpoint: GET /api/admin/dashboard/pending-actions
-  /// Headers: Authorization: Bearer <token>
+  /// Headers: Authorization: Bearer `<token>`
   Future<ApiResponse<Map<String, int>>> getPendingActions() async {
     await Future.delayed(const Duration(milliseconds: 300));
 

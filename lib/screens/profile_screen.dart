@@ -7,6 +7,7 @@ import '../widgets/profile/profile_info_tab.dart';
 import '../widgets/profile/additional_info_tab.dart';
 import '../widgets/profile/drive_summary_tab.dart';
 import '../widgets/profile/account_settings_tab.dart';
+import '../utils/logout_helper.dart';
 
 /// Profile Screen with State Management
 /// Manages student name across all tabs
@@ -101,38 +102,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _handleLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.logout_rounded, color: Colors.red[600]),
-            const SizedBox(width: 8),
-            const Text('Logout'),
-          ],
-        ),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showSnackBar('Logout confirmed (UI only)');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
+  void _handleLogout() async {
+    await LogoutHelper.logout(context);
   }
 
   void _handleProfileImageTap() {
