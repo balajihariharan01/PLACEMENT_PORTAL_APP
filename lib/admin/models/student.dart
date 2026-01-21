@@ -14,6 +14,7 @@ class Student {
   final PlacementStatus placementStatus;
   final List<String> assignedDriveIds;
   final double cgpa;
+  final int arrears;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -28,6 +29,7 @@ class Student {
     this.placementStatus = PlacementStatus.notPlaced,
     this.assignedDriveIds = const [],
     this.cgpa = 0.0,
+    this.arrears = 0,
     required this.createdAt,
     this.updatedAt,
   });
@@ -62,6 +64,7 @@ class Student {
       ),
       assignedDriveIds: List<String>.from(json['assignedDriveIds'] ?? []),
       cgpa: (json['cgpa'] ?? 0.0).toDouble(),
+      arrears: json['arrears'] ?? 0,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'])
@@ -82,6 +85,7 @@ class Student {
       'placementStatus': placementStatus.name,
       'assignedDriveIds': assignedDriveIds,
       'cgpa': cgpa,
+      'arrears': arrears,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -99,6 +103,7 @@ class Student {
     PlacementStatus? placementStatus,
     List<String>? assignedDriveIds,
     double? cgpa,
+    int? arrears,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -113,6 +118,7 @@ class Student {
       placementStatus: placementStatus ?? this.placementStatus,
       assignedDriveIds: assignedDriveIds ?? this.assignedDriveIds,
       cgpa: cgpa ?? this.cgpa,
+      arrears: arrears ?? this.arrears,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

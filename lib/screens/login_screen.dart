@@ -8,6 +8,7 @@ import '../admin/security/admin_route_guard.dart';
 import 'dashboard_screen.dart';
 import '../widgets/student_route_guard.dart';
 import '../widgets/animated_widgets.dart';
+import '../widgets/app_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -192,24 +193,10 @@ class _LoginScreenState extends State<LoginScreen>
               // Logo
               Hero(
                 tag: 'app_logo',
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primaryBlue.withValues(alpha: 0.2),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    'assets/images/logo.jpg',
-                    width: 70,
-                    height: 70,
-                  ),
+                child: AppLogo.adaptive(
+                  context: context,
+                  height: 80,
+                  isTransparent: true,
                 ),
               ),
               const SizedBox(height: 24),

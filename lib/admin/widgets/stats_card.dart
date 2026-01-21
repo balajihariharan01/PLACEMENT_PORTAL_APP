@@ -93,13 +93,20 @@ class _StatsCardState extends State<StatsCard>
             _isPressed ? 0.95 : 1.0,
             1.0,
           ),
-          // MOBILE-FIRST: Reduced padding for smaller screens
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           decoration: BoxDecoration(
-            color: widget.backgroundColor ?? Colors.white,
+            color:
+                widget.backgroundColor ??
+                (Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.cardDark
+                    : Colors.white),
             borderRadius: AppTheme.largeRadius,
             boxShadow: AppTheme.softShadow,
-            border: Border.all(color: widget.color.withValues(alpha: 0.2)),
+            border: Border.all(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white10
+                  : widget.color.withValues(alpha: 0.2),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

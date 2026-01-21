@@ -11,9 +11,12 @@ class AppTheme {
 
   // ========== BACKGROUND COLORS ==========
   static const Color scaffoldLight = Color(0xFFF5F9FA);
-  static const Color scaffoldDark = Color(0xFF121212);
+  static const Color scaffoldDark = Color(0xFF0F1116);
   static const Color cardLight = Colors.white;
-  static const Color cardDark = Color(0xFF1E1E1E);
+  static const Color cardDark = Color(0xFF181B21);
+  static const Color adminSidebarDark = Color(0xFF14171C);
+  static const Color adminSidebarLight = Colors.white;
+  static const Color adminAccent = Color(0xFF007DC5);
 
   // ========== STATUS COLORS ==========
   static const Color successGreen = Color(0xFF4CAF50);
@@ -118,6 +121,13 @@ class AppTheme {
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: Color(0xFF1A1A1A),
+    letterSpacing: -0.2,
+  );
+
+  static const TextStyle adminTabLabel = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.3,
   );
 
   static const TextStyle bodyLarge = TextStyle(

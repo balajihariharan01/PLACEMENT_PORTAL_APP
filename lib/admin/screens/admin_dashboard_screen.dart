@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 import 'package:flutter/services.dart';
+import '../../theme/app_theme.dart';
 import '../models/dashboard_stats.dart';
-import '../services/admin_auth_service.dart';
 import '../services/dashboard_service.dart';
-import '../security/admin_route_guard.dart';
+import '../../widgets/app_logo.dart';
 import '../../utils/logout_helper.dart';
-import '../widgets/stats_card.dart';
-import '../widgets/state_widgets.dart';
 import 'drive_management_screen.dart';
 import 'student_management_screen.dart';
 import 'calendar_screen.dart';
 
-import '../../widgets/branded_header.dart';
-
-/// Admin Dashboard Screen
-/// SECURITY: Protected by AdminRouteGuard - requires valid admin session
+/// Admin Dashboard Screen - Mobile-First Native Design
+/// 100% optimized for touch-based mobile interfaces
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -23,32 +18,45 @@ class AdminDashboardScreen extends StatefulWidget {
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen>
-    with SingleTickerProviderStateMixin {
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   final _dashboardService = DashboardService();
-  final _authService = AdminAuthService();
-
+  int _currentIndex = 0;
   DashboardStats? _stats;
-  List<Map<String, dynamic>>? _activities;
   bool _isLoading = true;
-  String? _error;
+  DateTime? _lastBackPress;
 
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-  DateTime? _lastBackPressTime;
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() => _isLoading = true);
+    try {
+      final statsResponse = await _dashboardService.getDashboardStats();
+      if (!mounted) return;
+      setState(() {
+        _stats = statsResponse.data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<bool> _handleBackPress() async {
     final now = DateTime.now();
-    if (_lastBackPressTime == null ||
-        now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
-      _lastBackPressTime = now;
+    if (_lastBackPress == null ||
+        now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+      _lastBackPress = now;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Press back again to exit'),
           backgroundColor: Colors.black87,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
       return false;
@@ -57,480 +65,402 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   }
 
   @override
-  void initState() {
-    super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
-    _fadeController.forward();
-    _loadDashboardData();
-  }
-
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadDashboardData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    try {
-      final statsResponse = await _dashboardService.getDashboardStats();
-      final activitiesResponse = await _dashboardService.getRecentActivities();
-
-      if (!mounted) return;
-
-      if (statsResponse.success) {
-        setState(() {
-          _stats = statsResponse.data;
-          _activities = activitiesResponse.data;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _error = statsResponse.message;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load dashboard data';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    await LogoutHelper.logout(context);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.scaffoldLight,
-      body: PopScope(
-        canPop: false,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final shouldPop = await _handleBackPress();
-          if (shouldPop && mounted) {
-            SystemNavigator.pop();
-          }
-        },
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadDashboardData,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverAppBar(
-                    expandedHeight: 200,
-                    pinned: true,
-                    backgroundColor: Colors.white,
-                    surfaceTintColor: Colors.white,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: BrandedHeader(
-                        title: 'Admin Console',
-                        subtitle: 'Centralized management & analytics',
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.notifications_none_rounded,
-                              ),
-                              onPressed: () {},
-                            ),
-                            _buildUserMenu(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Content
-                  if (_isLoading)
-                    const SliverFillRemaining(
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (_error != null)
-                    SliverFillRemaining(
-                      child: ErrorStateWidget(
-                        message: _error!,
-                        onRetry: _loadDashboardData,
-                      ),
-                    )
-                  else ...[
-                    // Overview Section
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      sliver: SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Performance Overview',
-                              style: AppTheme.headingSmall.copyWith(
-                                color: AppTheme.primaryBlue,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildStatsGrid(),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      sliver: SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Quick Actions',
-                              style: AppTheme.headingSmall.copyWith(
-                                color: AppTheme.primaryBlue,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildQuickActions(),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                      sliver: SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Recent Activity',
-                              style: AppTheme.headingSmall.copyWith(
-                                color: AppTheme.primaryBlue,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildActivityList(),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 40)),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUserMenu() {
-    return PopupMenuButton<String>(
-      icon: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryBlue.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.person_rounded,
-          size: 22,
-          color: AppTheme.primaryBlue,
-        ),
-      ),
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.largeRadius),
-      offset: const Offset(0, 48),
-      onSelected: (value) {
-        if (value == 'logout') _handleLogout();
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _handleBackPress();
+        if (shouldPop && mounted) SystemNavigator.pop();
       },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          enabled: false,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F6FA),
+        body: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _authService.currentAdmin?.name ?? 'Admin',
-                style: AppTheme.labelBold,
-              ),
-              Text(
-                _authService.currentAdmin?.email ?? 'admin@college.edu',
-                style: AppTheme.caption,
-              ),
-              const Divider(),
+              _buildCompactAppBar(),
+              Expanded(child: _buildBody()),
             ],
           ),
         ),
-        const PopupMenuItem(
-          value: 'settings',
-          child: Row(
-            children: [
-              Icon(Icons.settings_outlined, size: 20),
-              SizedBox(width: 12),
-              Text('System Settings'),
-            ],
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'logout',
-          child: Row(
-            children: [
-              Icon(Icons.logout_rounded, size: 20, color: AppTheme.errorRed),
-              SizedBox(width: 12),
-              Text('Sign Out', style: TextStyle(color: AppTheme.errorRed)),
-            ],
-          ),
-        ),
-      ],
+        bottomNavigationBar: _buildBottomNav(),
+      ),
     );
   }
 
-  Widget _buildStatsGrid() {
-    if (_stats == null) return const SizedBox.shrink();
-
-    // MOBILE-FIRST: Using Column + Row instead of GridView
-    // This prevents fixed height constraints and adapts to content
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // First row of cards
-        Row(
-          children: [
-            Expanded(
-              child: StatsCard(
-                title: 'Total Drives',
-                value: '${_stats!.totalDrives}',
-                icon: Icons.campaign_outlined,
-                color: AppTheme.primaryBlue,
-                animationIndex: 0,
-                onTap: () => _navigateToDrives(),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: StatsCard(
-                title: 'Active Drives',
-                value: '${_stats!.activeDrives}',
-                icon: Icons.play_circle_outline,
-                color: AppTheme.successGreen,
-                animationIndex: 1,
-                onTap: () => _navigateToDrives(),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Second row of cards
-        Row(
-          children: [
-            Expanded(
-              child: StatsCard(
-                title: 'Completed',
-                value: '${_stats!.completedDrives}',
-                icon: Icons.check_circle_outline,
-                color: Colors.grey,
-                animationIndex: 2,
-                onTap: () => _navigateToDrives(),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: StatsCard(
-                title: 'Students Placed',
-                value: '${_stats!.placedStudents}',
-                icon: Icons.school_outlined,
-                color: AppTheme.warningOrange,
-                animationIndex: 3,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActions() {
+  Widget _buildCompactAppBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: AppTheme.largeRadius,
-        boxShadow: AppTheme.softShadow,
-      ),
-      // MOBILE-FIRST: Use IntrinsicHeight for proper divider sizing
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildQuickActionItem(
-                Icons.add_circle_outline,
-                'Add Drive',
-                AppTheme.primaryBlue,
-                () => _navigateToDrives(addNew: true),
-              ),
-            ),
-            VerticalDivider(width: 1, thickness: 1, color: Colors.grey[200]),
-            Expanded(
-              child: _buildQuickActionItem(
-                Icons.school_outlined,
-                'Students',
-                AppTheme.successGreen,
-                _navigateToStudents,
-              ),
-            ),
-            VerticalDivider(width: 1, thickness: 1, color: Colors.grey[200]),
-            Expanded(
-              child: _buildQuickActionItem(
-                Icons.calendar_month,
-                'Calendar',
-                AppTheme.warningOrange,
-                _navigateToCalendar,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[700],
+        ],
+      ),
+      child: Row(
+        children: [
+          // Logo
+          AppLogo.adaptive(context: context, height: 28),
+          const SizedBox(width: 10),
+          // Title
+          const Expanded(
+            child: Text(
+              'Command Center',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+          ),
+          // Notification
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            icon: Badge(
+              smallSize: 6,
+              child: Icon(
+                Icons.notifications_none_rounded,
+                color: Colors.grey[600],
+                size: 22,
+              ),
+            ),
+            onPressed: () {},
+          ),
+          // Profile
+          PopupMenuButton<String>(
+            padding: EdgeInsets.zero,
+            icon: CircleAvatar(
+              radius: 14,
+              backgroundColor: AppTheme.primaryBlue,
+              child: const Icon(Icons.person, color: Colors.white, size: 16),
+            ),
+            offset: const Offset(0, 45),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            onSelected: (value) {
+              if (value == 'logout') LogoutHelper.logout(context);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'profile', child: Text('Profile')),
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Text('Logout', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityList() {
-    if (_activities == null || _activities!.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: AppTheme.largeRadius,
-        ),
-        child: Center(
-          child: Text(
-            'No recent activities',
-            style: TextStyle(color: Colors.grey[500]),
+  Widget _buildBody() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildDashboardContent();
+      case 1:
+        return const StudentManagementScreen();
+      case 2:
+        return const DriveManagementScreen();
+      case 3:
+        return const CalendarScreen();
+      default:
+        return _buildDashboardContent();
+    }
+  }
+
+  Widget _buildDashboardContent() {
+    return RefreshIndicator(
+      onRefresh: _loadDashboardData,
+      color: AppTheme.primaryBlue,
+      child: _isLoading ? _buildLoadingState() : _buildMainContent(),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: List.generate(
+        4,
+        (i) => Container(
+          height: 80,
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
-      );
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: AppTheme.largeRadius,
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Column(
-        children: _activities!.asMap().entries.map((entry) {
-          final index = entry.key;
-          final activity = entry.value;
-          final isLast = index == _activities!.length - 1;
-
-          return _buildActivityItem(activity, isLast, index);
-        }).toList(),
       ),
     );
   }
 
-  Widget _buildActivityItem(
-    Map<String, dynamic> activity,
-    bool isLast,
-    int index,
-  ) {
-    IconData icon;
-    Color color;
+  Widget _buildMainContent() {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildWelcomeBanner(),
+        const SizedBox(height: 20),
+        _buildKPIGrid(),
+        const SizedBox(height: 24),
+        _buildQuickActionsRow(),
+        const SizedBox(height: 24),
+        _buildDriveActivitySection(),
+        const SizedBox(height: 80), // Bottom padding for nav
+      ],
+    );
+  }
 
-    switch (activity['type']) {
-      case 'drive_created':
-        icon = Icons.add_circle;
-        color = AppTheme.primaryBlue;
-        break;
-      case 'student_placed':
-        icon = Icons.celebration;
-        color = AppTheme.successGreen;
-        break;
-      case 'drive_status':
-        icon = Icons.update;
-        color = AppTheme.warningOrange;
-        break;
-      case 'new_company':
-        icon = Icons.business;
-        color = Colors.purple;
-        break;
-      default:
-        icon = Icons.info;
-        color = Colors.grey;
-    }
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 100)),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(20 * (1 - value), 0),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : Border(bottom: BorderSide(color: Colors.grey[100]!)),
+  Widget _buildWelcomeBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF007DC5), Color(0xFF00A3E0)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Row(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.waving_hand, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Welcome, Admin!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Today\'s placement overview',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKPIGrid() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildKPICard(
+                '1,240',
+                'Students',
+                Icons.people_alt_rounded,
+                AppTheme.primaryBlue,
+                '+12%',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildKPICard(
+                '${_stats?.activeDrives ?? 8}',
+                'Active Drives',
+                Icons.campaign_rounded,
+                AppTheme.accentColor,
+                'Live',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildKPICard(
+                '78%',
+                'Placed',
+                Icons.check_circle_rounded,
+                Colors.orange,
+                '+5.4%',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildKPICard(
+                '₹6.5L',
+                'Avg. CTC',
+                Icons.payments_rounded,
+                Colors.purple,
+                'Good',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildKPICard(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+    String trend,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 18),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  trend,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsRow() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildQuickAction(
+            Icons.add_circle_outline,
+            'Add Drive',
+            AppTheme.primaryBlue,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const DriveManagementScreen(openAddForm: true),
+                ),
+              );
+            },
+          ),
+          _buildQuickAction(
+            Icons.person_add_alt_1_outlined,
+            'Add Student',
+            AppTheme.accentColor,
+            () {
+              setState(() => _currentIndex = 1);
+            },
+          ),
+          _buildQuickAction(
+            Icons.calendar_month_outlined,
+            'Calendar',
+            Colors.orange,
+            () {
+              setState(() => _currentIndex = 3);
+            },
+          ),
+          _buildQuickAction(
+            Icons.analytics_outlined,
+            'Reports',
+            Colors.purple,
+            () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(10),
@@ -540,30 +470,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    activity['title'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    activity['description'] ?? '',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 6),
             Text(
-              _formatTimestamp(activity['timestamp']),
-              style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
             ),
           ],
         ),
@@ -571,41 +485,308 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
     );
   }
 
-  String _formatTimestamp(String? timestamp) {
-    if (timestamp == null) return '';
+  Widget _buildDriveActivitySection() {
+    final activities = [
+      {
+        'company': 'TCS',
+        'drive': 'Campus Drive 2026',
+        'action': 'stage_updated',
+        'details': 'Technical Round',
+        'students': 42,
+        'time': '2h ago',
+      },
+      {
+        'company': 'Infosys',
+        'drive': 'Fresher Hiring',
+        'action': 'shortlisted',
+        'details': 'Written Test',
+        'students': 128,
+        'time': '5h ago',
+      },
+      {
+        'company': 'Wipro',
+        'drive': 'Elite Program',
+        'action': 'created',
+        'details': 'Registration Open',
+        'students': 0,
+        'time': '8h ago',
+      },
+      {
+        'company': 'Cognizant',
+        'drive': 'GenC Next',
+        'action': 'placed',
+        'details': 'Completed',
+        'students': 23,
+        'time': '1d ago',
+      },
+      {
+        'company': 'Accenture',
+        'drive': 'ASE Hiring',
+        'action': 'closed',
+        'details': 'Interview Phase',
+        'students': 85,
+        'time': '1d ago',
+      },
+    ];
 
-    final date = DateTime.tryParse(timestamp);
-    if (date == null) return '';
-
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}m ago';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours}h ago';
-    } else if (diff.inDays < 7) {
-      return '${diff.inDays}d ago';
-    } else {
-      return '${date.day}/${date.month}';
-    }
-  }
-
-  void _navigateToDrives({bool addNew = false}) {
-    // SECURITY: Use protected route navigation
-    AdminRouteMiddleware.navigateTo(
-      context,
-      DriveManagementScreen(openAddForm: addNew),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.campaign_rounded,
+                    color: AppTheme.primaryBlue,
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Drive Activity',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _currentIndex = 2),
+              child: Text(
+                'See All',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.primaryBlue,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...activities.map((a) => _buildDriveCard(a)),
+      ],
     );
   }
 
-  void _navigateToStudents() {
-    // SECURITY: Use protected route navigation
-    AdminRouteMiddleware.navigateTo(context, const StudentManagementScreen());
+  Widget _buildDriveCard(Map<String, dynamic> activity) {
+    final action = activity['action'] as String;
+    IconData icon;
+    Color color;
+    String label;
+
+    switch (action) {
+      case 'created':
+        icon = Icons.add_circle_rounded;
+        color = AppTheme.primaryBlue;
+        label = 'New Drive Created';
+        break;
+      case 'stage_updated':
+        icon = Icons.arrow_forward_rounded;
+        color = AppTheme.accentColor;
+        label = 'Stage → ${activity['details']}';
+        break;
+      case 'shortlisted':
+        icon = Icons.how_to_reg_rounded;
+        color = AppTheme.warningOrange;
+        label = 'Students Shortlisted';
+        break;
+      case 'placed':
+        icon = Icons.celebration_rounded;
+        color = AppTheme.successGreen;
+        label = 'Students Placed';
+        break;
+      case 'closed':
+        icon = Icons.lock_clock_rounded;
+        color = Colors.purple;
+        label = 'Registration Closed';
+        break;
+      default:
+        icon = Icons.update_rounded;
+        color = Colors.grey;
+        label = 'Updated';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _currentIndex = 2),
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${activity['company']} – ${activity['drive']}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if ((activity['students'] as int) > 0) ...[
+                            Icon(
+                              Icons.people_alt_rounded,
+                              size: 10,
+                              color: Colors.grey[500],
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${activity['students']} students',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            Text(
+                              ' · ',
+                              style: TextStyle(color: Colors.grey[400]),
+                            ),
+                          ],
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 10,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${activity['time']}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.grey[300],
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  void _navigateToCalendar() {
-    // SECURITY: Use protected route navigation
-    AdminRouteMiddleware.navigateTo(context, const CalendarScreen());
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.dashboard_rounded, 'Dashboard'),
+              _buildNavItem(1, Icons.school_rounded, 'Students'),
+              _buildNavItem(2, Icons.campaign_rounded, 'Drives'),
+              _buildNavItem(3, Icons.calendar_month_rounded, 'Calendar'),
+              _buildNavItem(4, Icons.person_rounded, 'Profile'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = _currentIndex == index;
+    return InkWell(
+      onTap: () => setState(() => _currentIndex = index),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.primaryBlue.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppTheme.primaryBlue : Colors.grey,
+              size: 22,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? AppTheme.primaryBlue : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

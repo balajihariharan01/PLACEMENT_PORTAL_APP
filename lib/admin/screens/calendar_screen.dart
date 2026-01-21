@@ -4,7 +4,7 @@ import '../models/drive.dart';
 import '../services/drive_service.dart';
 import '../widgets/state_widgets.dart';
 import '../security/admin_route_guard.dart';
-import '../../widgets/branded_header.dart';
+import '../../widgets/app_logo.dart';
 import 'drive_details_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -108,27 +108,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            BrandedHeader(
-              title: 'Drive Calendar',
-              subtitle: 'Track all recruitment events',
-              showBackButton: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.today_rounded,
-                    color: AppTheme.primaryBlue,
-                  ),
-                  onPressed: () => setState(
-                    () => _currentMonth = DateTime(_today.year, _today.month),
-                  ),
-                  tooltip: 'Today',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh_rounded),
-                  onPressed: _loadDrives,
-                ),
-              ],
-            ),
+            _buildCalendarHeader(),
 
             // Month Switcher
             _buildMonthSwitcher(),
@@ -143,6 +123,49 @@ class _CalendarScreenState extends State<CalendarScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCalendarHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Row(
+        children: [
+          AppLogo.adaptive(context: context, height: 32),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Drive Calendar',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  'Track all recruitment events',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.today_rounded, color: AppTheme.primaryBlue),
+            onPressed: () => setState(
+              () => _currentMonth = DateTime(_today.year, _today.month),
+            ),
+            tooltip: 'Today',
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _loadDrives,
+          ),
+        ],
       ),
     );
   }

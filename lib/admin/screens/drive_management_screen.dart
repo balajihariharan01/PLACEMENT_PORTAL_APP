@@ -2,316 +2,180 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../models/drive.dart';
 import '../services/drive_service.dart';
-import '../widgets/admin_drive_card.dart';
 import '../widgets/state_widgets.dart';
-import '../widgets/dialogs.dart';
+import '../../widgets/app_logo.dart';
 import 'drive_form_screen.dart';
 import 'drive_details_screen.dart';
-import '../../widgets/branded_header.dart';
 
-/// Drive Management Screen
-/// List view with filtering, search, and CRUD operations
+/// Drive Management Screen - Mobile-First Native Design
 class DriveManagementScreen extends StatefulWidget {
   final bool openAddForm;
-
   const DriveManagementScreen({super.key, this.openAddForm = false});
 
   @override
   State<DriveManagementScreen> createState() => _DriveManagementScreenState();
 }
 
-class _DriveManagementScreenState extends State<DriveManagementScreen>
-    with SingleTickerProviderStateMixin {
+class _DriveManagementScreenState extends State<DriveManagementScreen> {
   final _driveService = DriveService();
   final _searchController = TextEditingController();
 
   List<Drive> _drives = [];
   bool _isLoading = true;
-  String? _error;
   DriveStatus? _selectedStatus;
-  String _searchQuery = '';
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
-    _fadeController.forward();
     _loadDrives();
-
-    // Open add form if requested
     if (widget.openAddForm) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _navigateToForm();
-      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _navigateToAdd());
     }
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDrives() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
+    setState(() => _isLoading = true);
     final response = await _driveService.getAllDrives(
       status: _selectedStatus,
-      searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+      searchQuery: _searchController.text.isNotEmpty
+          ? _searchController.text
+          : null,
     );
-
     if (!mounted) return;
-
-    if (response.success) {
-      setState(() {
-        _drives = response.data ?? [];
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _error = response.message;
-        _isLoading = false;
-      });
-    }
+    setState(() {
+      _drives = response.data ?? [];
+      _isLoading = false;
+    });
   }
 
-  Future<void> _handleDeleteDrive(Drive drive) async {
-    final confirmed = await ConfirmationDialog.showDelete(
-      context: context,
-      itemName: 'drive',
-    );
-
-    if (confirmed == true) {
-      final response = await _driveService.deleteDrive(drive.id);
-
-      if (!mounted) return;
-
-      if (response.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Drive deleted successfully'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.successGreen,
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
-          ),
-        );
-        _loadDrives();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response.message ?? 'Failed to delete drive'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppTheme.errorRed,
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
-          ),
-        );
-      }
-    }
-  }
-
-  void _navigateToForm({Drive? drive}) async {
-    final result = await Navigator.push<bool>(
+  void _navigateToDetails(Drive drive) {
+    Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            DriveFormScreen(drive: drive),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-                .animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: AppTheme.defaultCurve,
-                  ),
-                ),
-            child: child,
-          );
-        },
-        transitionDuration: AppTheme.normalDuration,
-      ),
-    );
-
-    if (result == true) {
-      _loadDrives();
-    }
+      MaterialPageRoute(builder: (_) => DriveDetailsScreen(drive: drive)),
+    ).then((result) {
+      if (result == true) _loadDrives();
+    });
   }
 
-  void _navigateToDetails(Drive drive) async {
-    final result = await Navigator.push<bool>(
+  void _navigateToAdd() {
+    Navigator.push(
       context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            DriveDetailsScreen(drive: drive),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-                .animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: AppTheme.defaultCurve,
-                  ),
-                ),
-            child: child,
-          );
-        },
-        transitionDuration: AppTheme.normalDuration,
-      ),
-    );
-
-    if (result == true) {
-      _loadDrives();
-    }
+      MaterialPageRoute(builder: (_) => const DriveFormScreen()),
+    ).then((result) {
+      if (result == true) _loadDrives();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.scaffoldLight,
+      backgroundColor: const Color(0xFFF8F9FB),
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            children: [
-              BrandedHeader(
-                title: 'Drive Management',
-                subtitle: 'Manage and track recruitment drives',
-                showBackButton: true,
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.refresh_rounded),
-                    onPressed: _loadDrives,
-                  ),
-                ],
-              ),
-              // Search and Filter Section
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Search Bar
-                    TextField(
-                      controller: _searchController,
-                      onChanged: (value) {
-                        setState(() => _searchQuery = value);
-                        // Debounced search
-                        Future.delayed(const Duration(milliseconds: 500), () {
-                          if (_searchQuery == value) {
-                            _loadDrives();
-                          }
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search drives...',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                  _loadDrives();
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.grey[50],
-                        border: OutlineInputBorder(
-                          borderRadius: AppTheme.pillRadius,
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Filter Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildFilterChip('All', null),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('Active', DriveStatus.active),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('Upcoming', DriveStatus.upcoming),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('Closed', DriveStatus.closed),
-                          const SizedBox(width: 8),
-                          _buildFilterChip('On Hold', DriveStatus.onHold),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Drives List
-              Expanded(
-                child: _isLoading
-                    ? _buildLoadingState()
-                    : _error != null
-                    ? ErrorStateWidget(message: _error!, onRetry: _loadDrives)
-                    : _drives.isEmpty
-                    ? EmptyStateWidget(
-                        icon: Icons.campaign_outlined,
-                        title: 'No drives found',
-                        subtitle: _searchQuery.isNotEmpty
-                            ? 'Try a different search term'
-                            : 'Create your first drive to get started',
-                        buttonText: 'Add Drive',
-                        onButtonPressed: () => _navigateToForm(),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadDrives,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          physics: const AlwaysScrollableScrollPhysics(
-                            parent: BouncingScrollPhysics(),
-                          ),
-                          itemCount: _drives.length,
-                          itemBuilder: (context, index) {
-                            final drive = _drives[index];
-                            return AdminDriveCard(
-                              drive: drive,
-                              animationIndex: index,
-                              onTap: () => _navigateToDetails(drive),
-                              onEdit: () => _navigateToForm(drive: drive),
-                              onDelete: () => _handleDeleteDrive(drive),
-                            );
-                          },
-                        ),
-                      ),
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildSearchHeader(),
+            _buildFilterChips(),
+            Expanded(child: _buildDriveList()),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToForm(),
+        onPressed: _navigateToAdd,
         backgroundColor: AppTheme.primaryBlue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Add Drive',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        label: const Text('New Drive', style: TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+
+  Widget _buildSearchHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppLogo.adaptive(context: context, height: 32),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Recruitment Drives',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_drives.length} drives found',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: AppTheme.mediumRadius,
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => _loadDrives(),
+              decoration: InputDecoration(
+                hintText: 'Search drives...',
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _loadDrives();
+                        },
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildFilterChip('All', null),
+            const SizedBox(width: 8),
+            _buildFilterChip('Active', DriveStatus.active),
+            const SizedBox(width: 8),
+            _buildFilterChip('Upcoming', DriveStatus.upcoming),
+            const SizedBox(width: 8),
+            _buildFilterChip('Closed', DriveStatus.closed),
+            const SizedBox(width: 8),
+            _buildFilterChip('On Hold', DriveStatus.onHold),
+          ],
         ),
       ),
     );
@@ -326,14 +190,11 @@ class _DriveManagementScreenState extends State<DriveManagementScreen>
         _loadDrives();
       },
       child: AnimatedContainer(
-        duration: AppTheme.fastDuration,
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryBlue : Colors.grey[100],
+          color: isSelected ? AppTheme.primaryBlue : Colors.grey.shade100,
           borderRadius: AppTheme.pillRadius,
-          border: Border.all(
-            color: isSelected ? AppTheme.primaryBlue : Colors.grey[300]!,
-          ),
         ),
         child: Text(
           label,
@@ -347,11 +208,220 @@ class _DriveManagementScreenState extends State<DriveManagementScreen>
     );
   }
 
-  Widget _buildLoadingState() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 5,
-      itemBuilder: (context, index) => const DriveCardSkeleton(),
+  Widget _buildDriveList() {
+    if (_isLoading) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: 5,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildShimmerCard(),
+        ),
+      );
+    }
+
+    if (_drives.isEmpty) {
+      return const EmptyStateWidget(
+        icon: Icons.campaign_outlined,
+        title: 'No Drives Found',
+        subtitle: 'Create your first recruitment drive',
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadDrives,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        itemCount: _drives.length,
+        itemBuilder: (context, index) {
+          final drive = _drives[index];
+          return _buildDriveCard(drive, index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildShimmerCard() {
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: AppTheme.mediumRadius,
+      ),
+    );
+  }
+
+  Widget _buildDriveCard(Drive drive, int index) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 300 + (index * 50)),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(opacity: value, child: child),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: AppTheme.largeRadius,
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _navigateToDetails(drive),
+            borderRadius: AppTheme.largeRadius,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.business,
+                            color: AppTheme.primaryBlue,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              drive.companyName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              drive.jobRole,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _buildStatusBadge(drive.status),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildInfoItem(
+                        Icons.calendar_today,
+                        _formatDate(drive.dateTime),
+                      ),
+                      const SizedBox(width: 20),
+                      _buildInfoItem(
+                        Icons.currency_rupee,
+                        drive.salaryPackage ?? 'Not specified',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildInfoItem(
+                        Icons.people,
+                        '${drive.registeredCount ?? 0} Applied',
+                      ),
+                      const SizedBox(width: 20),
+                      _buildInfoItem(
+                        Icons.check_circle_outline,
+                        '${drive.placedCount ?? 0} Selected',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.grey.shade500),
+        const SizedBox(width: 6),
+        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${date.day} ${months[date.month - 1]}, ${date.year}';
+  }
+
+  Widget _buildStatusBadge(DriveStatus status) {
+    Color color;
+    switch (status) {
+      case DriveStatus.active:
+        color = AppTheme.successGreen;
+        break;
+      case DriveStatus.upcoming:
+        color = AppTheme.primaryBlue;
+        break;
+      case DriveStatus.onHold:
+        color = AppTheme.warningOrange;
+        break;
+      case DriveStatus.closed:
+        color = Colors.grey;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: AppTheme.pillRadius,
+      ),
+      child: Text(
+        status.displayName,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
     );
   }
 }

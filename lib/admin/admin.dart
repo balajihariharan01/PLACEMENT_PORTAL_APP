@@ -24,6 +24,7 @@ export 'services/student_service.dart';
 export 'security/admin_session_manager.dart';
 export 'security/admin_route_guard.dart';
 export 'security/admin_entry_point.dart';
+export 'layout/admin_scaffold.dart';
 
 // Widgets
 export 'widgets/admin_text_field.dart';
@@ -32,6 +33,8 @@ export 'widgets/stats_card.dart';
 export 'widgets/admin_drive_card.dart';
 export 'widgets/student_card.dart';
 export 'widgets/state_widgets.dart';
+export 'widgets/charts_widgets.dart';
+export 'widgets/admin_sidebar.dart';
 export 'widgets/dialogs.dart';
 
 // Screens
