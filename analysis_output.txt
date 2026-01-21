@@ -1,0 +1,61 @@
+﻿Analyzing student_app...                                        
+
+   info - Dangling library doc comment - lib\utils\validators.dart:1:1 - dangling_library_doc_comments
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\widgets\animated_widgets.dart:89:42 - deprecated_member_use
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\widgets\animated_widgets.dart:154:40 - deprecated_member_use
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\widgets\animated_widgets.dart:298:40 - deprecated_member_use
+   info - The private field _hasFocus could be 'final' - lib\widgets\animated_widgets.dart:565:8 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\custom_text_field.dart:45:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\drive_card.dart:32:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\drive_card.dart:62:49 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:91:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:97:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:99:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:105:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:107:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:111:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:113:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:115:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:117:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:119:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:121:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:126:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:128:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:144:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:146:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:152:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:154:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:156:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:158:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:160:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\additional_info_tab.dart:162:7 - curly_braces_in_flow_control_structures
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\widgets\profile\drive_summary_tab.dart:269:42 - deprecated_member_use
+   info - The private field _isEmailVerified could be 'final' - lib\widgets\profile\profile_info_tab.dart:39:8 - prefer_final_fields
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:79:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:81:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:83:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:87:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:90:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:96:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:98:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:104:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\widgets\profile\profile_info_tab.dart:106:7 - curly_braces_in_flow_control_structures
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\widgets\profile\profile_tabs.dart:121:42 - deprecated_member_use
+
+flutter : 41 issues 
+found. (ran in 1.7s)
+At line:1 char:1
++ flutter analyze 2>&1 | 
+Out-File -FilePath 
+analysis_output.txt 
+-Encodi ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo       
+       : NotSpecified:   
+  (41 issues found. (r   
+ an in 1.7s):String)     
+[], RemoteException
+    + FullyQualifiedErro 
+   rId : NativeCommandE  
+  rror
+ 
