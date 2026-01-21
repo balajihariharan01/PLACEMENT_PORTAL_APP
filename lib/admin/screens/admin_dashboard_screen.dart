@@ -3,11 +3,14 @@ import '../../theme/app_theme.dart';
 import '../models/dashboard_stats.dart';
 import '../services/admin_auth_service.dart';
 import '../services/dashboard_service.dart';
+import '../services/student_service.dart';
 import '../security/admin_route_guard.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/state_widgets.dart';
 import '../widgets/dialogs.dart';
 import 'drive_management_screen.dart';
+import 'student_management_screen.dart';
+import 'calendar_screen.dart';
 import 'admin_login_screen.dart';
 
 /// Admin Dashboard Screen
