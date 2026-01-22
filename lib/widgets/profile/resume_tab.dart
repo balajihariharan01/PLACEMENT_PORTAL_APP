@@ -346,76 +346,129 @@ class _ResumeTabState extends State<ResumeTab> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'Select Resume File',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(12),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.5,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Select Resume File',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                child: Icon(Icons.picture_as_pdf, color: Colors.red[600]),
-              ),
-              title: const Text('Sample_Resume.pdf'),
-              subtitle: const Text('Valid PDF file • 850 KB'),
-              trailing: const Icon(Icons.check_circle, color: Colors.green),
-              onTap: () {
-                Navigator.pop(context);
-                _selectFile('Sample_Resume.pdf', true);
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
+                const Divider(height: 1),
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.red[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Sample_Resume.pdf',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Valid PDF file • 850 KB',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectFile('Sample_Resume.pdf', true);
+                  },
                 ),
-                child: Icon(Icons.description, color: Colors.blue[600]),
-              ),
-              title: const Text('Document.docx'),
-              subtitle: const Text('Invalid format - Word document'),
-              trailing: const Icon(Icons.cancel, color: Colors.red),
-              onTap: () {
-                Navigator.pop(context);
-                _selectFile('Document.docx', false);
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  shape: BoxShape.circle,
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.description,
+                      color: Colors.blue[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Document.docx',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Invalid format - Word document',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.cancel,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectFile('Document.docx', false);
+                  },
                 ),
-                child: Icon(Icons.picture_as_pdf, color: Colors.orange[600]),
-              ),
-              title: const Text('Large_Resume.pdf'),
-              subtitle: const Text('File too large • 2.5 MB'),
-              trailing: const Icon(Icons.warning, color: Colors.orange),
-              onTap: () {
-                Navigator.pop(context);
-                _selectFile('Large_Resume.pdf', false, sizeTooLarge: true);
-              },
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.picture_as_pdf,
+                      color: Colors.orange[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Large_Resume.pdf',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'File too large • 2.5 MB',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  trailing: const Icon(
+                    Icons.warning,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectFile('Large_Resume.pdf', false, sizeTooLarge: true);
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );

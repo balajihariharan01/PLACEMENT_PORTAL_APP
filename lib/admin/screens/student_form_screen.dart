@@ -135,6 +135,20 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
         backgroundColor: AppTheme.primaryBlue,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          Tooltip(
+            message: 'Back to Home',
+            child: IconButton(
+              icon: const Icon(Icons.home_rounded),
+              onPressed: () {
+                final nav = Navigator.of(context);
+                if (nav.canPop()) {
+                  nav.popUntil((route) => route.isFirst);
+                }
+              },
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

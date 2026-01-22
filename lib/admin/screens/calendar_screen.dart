@@ -5,6 +5,7 @@ import '../services/drive_service.dart';
 import '../widgets/state_widgets.dart';
 import '../security/admin_route_guard.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/home_back_button.dart';
 import 'drive_details_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -128,42 +129,57 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildCalendarHeader() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 400;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       color: Colors.white,
       child: Row(
         children: [
-          AppLogo.adaptive(context: context, height: 32),
-          const SizedBox(width: 12),
-          const Expanded(
+          const HomeBackButtonCard(),
+          const SizedBox(width: 8),
+          AppLogo.adaptive(context: context, height: isMobile ? 24 : 32),
+          const SizedBox(width: 8),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Drive Calendar',
+                  isMobile ? 'Calendar' : 'Drive Calendar',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: isMobile ? 16 : 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  'Track all recruitment events',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                if (!isMobile)
+                  const Text(
+                    'Track recruitment events',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.today_rounded, color: AppTheme.primaryBlue),
+            icon: Icon(
+              Icons.today_rounded,
+              color: AppTheme.primaryBlue,
+              size: isMobile ? 20 : 24,
+            ),
             onPressed: () => setState(
               () => _currentMonth = DateTime(_today.year, _today.month),
             ),
             tooltip: 'Today',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded, size: isMobile ? 20 : 24),
             onPressed: _loadDrives,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
         ],
       ),

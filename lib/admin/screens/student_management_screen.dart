@@ -4,6 +4,7 @@ import '../models/student.dart';
 import '../services/student_service.dart';
 import '../widgets/state_widgets.dart';
 import '../../widgets/app_logo.dart';
+import '../../widgets/home_back_button.dart';
 import 'student_form_screen.dart';
 import 'student_details_screen.dart';
 
@@ -94,24 +95,39 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   }
 
   Widget _buildSearchHeader() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 400;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              AppLogo.adaptive(context: context, height: 32),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Students',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+              const HomeBackButtonCard(),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Row(
+                  children: [
+                    AppLogo.adaptive(
+                      context: context,
+                      height: isMobile ? 24 : 32,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Students',
+                        style: TextStyle(
+                          fontSize: isMobile ? 18 : 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -119,9 +135,9 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
           const SizedBox(height: 4),
           Text(
             '${_students?.length ?? 0} students registered',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
@@ -130,13 +146,18 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
             child: TextField(
               controller: _searchController,
               onChanged: (_) => _loadStudents(),
+              style: const TextStyle(fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Search by name, USN...',
-                hintStyle: TextStyle(color: Colors.grey.shade500),
-                prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.grey.shade500,
+                  size: 20,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.clear, size: 20),
                         onPressed: () {
                           _searchController.clear();
                           _loadStudents();
@@ -145,8 +166,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                  horizontal: 12,
+                  vertical: 12,
                 ),
               ),
             ),

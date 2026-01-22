@@ -179,105 +179,122 @@ class _DriveDetailsScreenState extends State<DriveDetailsScreen>
   void _showStatusSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Update Status',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ...DriveStatus.values.map((status) {
-              final isSelected = _drive.status == status;
-              Color color;
-
-              switch (status) {
-                case DriveStatus.active:
-                  color = AppTheme.successGreen;
-                  break;
-                case DriveStatus.closed:
-                  color = Colors.grey;
-                  break;
-                case DriveStatus.upcoming:
-                  color = AppTheme.primaryBlue;
-                  break;
-                case DriveStatus.onHold:
-                  color = AppTheme.warningOrange;
-                  break;
-              }
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.pop(context);
-                  _handleStatusChange(status);
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? color.withValues(alpha: 0.1)
-                        : Colors.grey[50],
-                    borderRadius: AppTheme.mediumRadius,
-                    border: Border.all(
-                      color: isSelected ? color : Colors.grey[200]!,
-                      width: isSelected ? 2 : 1,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Update Status',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...DriveStatus.values.map((status) {
+                    final isSelected = _drive.status == status;
+                    Color color;
+
+                    switch (status) {
+                      case DriveStatus.active:
+                        color = AppTheme.successGreen;
+                        break;
+                      case DriveStatus.closed:
+                        color = Colors.grey;
+                        break;
+                      case DriveStatus.upcoming:
+                        color = AppTheme.primaryBlue;
+                        break;
+                      case DriveStatus.onHold:
+                        color = AppTheme.warningOrange;
+                        break;
+                    }
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _handleStatusChange(status);
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _getStatusIcon(status),
-                          color: color,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          status.displayName,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                          color: isSelected
+                              ? color.withValues(alpha: 0.1)
+                              : Colors.grey[50],
+                          borderRadius: AppTheme.mediumRadius,
+                          border: Border.all(
+                            color: isSelected ? color : Colors.grey[200]!,
+                            width: isSelected ? 2 : 1,
                           ),
                         ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _getStatusIcon(status),
+                                color: color,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                status.displayName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              Icon(Icons.check_circle, color: color, size: 22),
+                          ],
+                        ),
                       ),
-                      if (isSelected) Icon(Icons.check_circle, color: color),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            const SizedBox(height: 12),
-          ],
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -330,6 +347,18 @@ class _DriveDetailsScreenState extends State<DriveDetailsScreen>
                 ),
               ),
               actions: [
+                Tooltip(
+                  message: 'Back to Home',
+                  child: IconButton(
+                    icon: const Icon(Icons.home_rounded, color: Colors.white),
+                    onPressed: () {
+                      final nav = Navigator.of(context);
+                      if (nav.canPop()) {
+                        nav.popUntil((route) => route.isFirst);
+                      }
+                    },
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, color: Colors.white),
                   onPressed: _handleEdit,

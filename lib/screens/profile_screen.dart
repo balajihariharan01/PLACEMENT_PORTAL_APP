@@ -110,73 +110,114 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(20),
-              child: Text(
-                'Change Profile Photo',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: Container(
+          margin: const EdgeInsets.all(12),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.5,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Change Profile Photo',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                child: Icon(Icons.camera_alt, color: Colors.blue[600]),
-              ),
-              title: const Text('Take Photo'),
-              subtitle: const Text('Use your camera'),
-              onTap: () {
-                Navigator.pop(context);
-                _showSnackBar('Camera would open here');
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
+                const Divider(height: 1),
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.camera_alt,
+                      color: Colors.blue[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Take Photo',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Use your camera',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showSnackBar('Camera would open here');
+                  },
                 ),
-                child: Icon(Icons.photo_library, color: Colors.green[600]),
-              ),
-              title: const Text('Choose from Gallery'),
-              subtitle: const Text('Select from your photos'),
-              onTap: () {
-                Navigator.pop(context);
-                _showSnackBar('Gallery would open here');
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.photo_library,
+                      color: Colors.green[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Choose from Gallery',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Select from your photos',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showSnackBar('Gallery would open here');
+                  },
                 ),
-                child: Icon(Icons.delete_outline, color: Colors.red[600]),
-              ),
-              title: const Text('Remove Photo'),
-              subtitle: const Text('Use default avatar'),
-              onTap: () {
-                Navigator.pop(context);
-                _showSnackBar('Photo removed (UI only)');
-              },
+                ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.delete_outline,
+                      color: Colors.red[600],
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Remove Photo',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'Use default avatar',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showSnackBar('Photo removed (UI only)');
+                  },
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );

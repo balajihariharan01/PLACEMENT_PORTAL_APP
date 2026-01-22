@@ -142,6 +142,20 @@ class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
               fit: BoxFit.contain,
             ),
           ),
+          actions: [
+            Tooltip(
+              message: 'Back to Home',
+              child: IconButton(
+                icon: const Icon(Icons.home_rounded, color: Colors.white),
+                onPressed: () {
+                  final nav = Navigator.of(context);
+                  if (nav.canPop()) {
+                    nav.popUntil((route) => route.isFirst);
+                  }
+                },
+              ),
+            ),
+          ],
           flexibleSpace: FlexibleSpaceBar(background: _buildHeader()),
         ),
 
