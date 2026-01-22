@@ -3,7 +3,6 @@ import '../../theme/app_theme.dart';
 import '../models/drive.dart';
 import '../services/drive_service.dart';
 import '../widgets/state_widgets.dart';
-import '../../widgets/app_logo.dart';
 import '../../widgets/home_back_button.dart';
 import 'drive_form_screen.dart';
 import 'drive_details_screen.dart';
@@ -110,25 +109,21 @@ class _DriveManagementScreenState extends State<DriveManagementScreen> {
               const HomeBackButtonCard(),
               const SizedBox(width: 8),
               Flexible(
-                child: Row(
-                  children: [
-                    AppLogo.adaptive(
-                      context: context,
-                      height: isMobile ? 24 : 32,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFF2196F3), Color(0xFF4CAF50)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    isMobile ? 'Drives' : 'Recruitment Drives',
+                    style: TextStyle(
+                      fontSize: isMobile ? 18 : 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        isMobile ? 'Drives' : 'Recruitment Drives',
-                        style: TextStyle(
-                          fontSize: isMobile ? 18 : 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],

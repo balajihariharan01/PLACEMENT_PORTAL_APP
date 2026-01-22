@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../widgets/drive_card.dart';
-import '../widgets/animated_widgets.dart';
+import '../models/drive_model.dart';
+import '../services/drive_service.dart';
+import '../widgets/dashboard/enhanced_drive_card.dart';
+import '../widgets/dashboard/filter_modal.dart';
 import '../theme/app_theme.dart';
 import 'placed_drives_tab.dart';
 import 'profile_screen.dart';
+import 'drive_detail_screen.dart';
 import '../widgets/no_data_widget.dart';
 import '../widgets/branded_header.dart';
+import '../widgets/animated_widgets.dart';
+import '../utils/logout_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -22,6 +27,33 @@ class _DashboardScreenState extends State<DashboardScreen>
   late Animation<double> _fadeAnimation;
   DateTime? _lastBackPressTime;
 
+  // Data
+  final DriveService _driveService = DriveService();
+  List<Drive> _allDrives = [];
+  List<Drive> _filteredDrives = [];
+  bool _isLoading = true;
+
+  // Tabs
+  String _selectedTab = "Upcoming";
+  final List<String> _tabs = [
+    "Upcoming",
+    "Ongoing",
+    "Completed",
+    "On Hold",
+    "Reopened",
+    "All",
+    "Not Eligible",
+  ];
+
+  // Sorting
+  String _selectedSort = "Apply Date Ascending";
+  final List<String> _sortOptions = [
+    "A to Z",
+    "Z to A",
+    "Apply Date Ascending",
+    "Apply Date Descending",
+  ];
+
   Future<bool> _handleBackPress() async {
     final now = DateTime.now();
     if (_lastBackPressTime == null ||
@@ -33,19 +65,12 @@ class _DashboardScreenState extends State<DashboardScreen>
           backgroundColor: Colors.black87,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
-          shape: RoundedRectangleBorder(borderRadius: AppTheme.smallRadius),
         ),
       );
       return false;
     }
     return true;
   }
-
-  // -- Drives Tab Data --
-  String _drivesSelectedTab = "All";
-  final List<String> _drivesTabs = ["Opened", "All", "Eligible", "Applied"];
-
-  final List<Map<String, dynamic>> _drives = [];
 
   @override
   void initState() {
@@ -59,12 +84,85 @@ class _DashboardScreenState extends State<DashboardScreen>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
     _fadeController.forward();
+
+    _loadDrives();
   }
 
-  @override
-  void dispose() {
-    _fadeController.dispose();
-    super.dispose();
+  Future<void> _loadDrives() async {
+    final drives = await _driveService.getDrives();
+    if (mounted) {
+      setState(() {
+        _allDrives = drives;
+        _isLoading = false;
+        _applyFilters();
+      });
+    }
+  }
+
+  void _applyFilters() {
+    // Basic Tab Filtering
+    List<Drive> temp = [];
+
+    switch (_selectedTab) {
+      case "All":
+        temp = List.from(_allDrives);
+        break;
+      case "Upcoming":
+        temp = _allDrives
+            .where(
+              (d) =>
+                  d.status != DriveStatus.closed &&
+                  d.status != DriveStatus.notEligible,
+            )
+            .toList(); // Simplified logic
+        break;
+      case "Ongoing":
+        // Mock logic: All drives are essentially 'ongoing' in this demo unless closed
+        temp = _allDrives
+            .where(
+              (d) =>
+                  d.status == DriveStatus.applied ||
+                  d.status == DriveStatus.eligible,
+            )
+            .toList();
+        break;
+      case "Completed":
+        temp = _allDrives
+            .where(
+              (d) =>
+                  d.status == DriveStatus.placed ||
+                  d.status == DriveStatus.closed,
+            )
+            .toList();
+        break;
+      case "Not Eligible":
+        temp = _allDrives
+            .where((d) => d.status == DriveStatus.notEligible)
+            .toList();
+        break;
+      default:
+        temp = _allDrives; // Fallback
+    }
+
+    // Sorting
+    temp.sort((a, b) {
+      switch (_selectedSort) {
+        case "A to Z":
+          return a.companyName.compareTo(b.companyName);
+        case "Z to A":
+          return b.companyName.compareTo(a.companyName);
+        case "Apply Date Ascending":
+          return a.applyDate.compareTo(b.applyDate);
+        case "Apply Date Descending":
+          return b.applyDate.compareTo(a.applyDate);
+        default:
+          return 0;
+      }
+    });
+
+    setState(() {
+      _filteredDrives = temp;
+    });
   }
 
   void _onTabChanged(int index) {
@@ -76,9 +174,15 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.scaffoldLight,
+      backgroundColor: Colors.grey[50], // Very light grey background
       body: PopScope(
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
@@ -91,28 +195,36 @@ class _DashboardScreenState extends State<DashboardScreen>
         child: SafeArea(
           child: Column(
             children: [
+              // Header
               if (_selectedIndex != 2)
                 BrandedHeader(
                   title: _selectedIndex == 0
                       ? 'Placement Drives'
                       : 'My Successes',
                   subtitle: _selectedIndex == 0
-                      ? 'Discover top career opportunities'
-                      : 'Track your career milestones',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.search_rounded),
-                        onPressed: () {},
+                      ? 'Find your dream job'
+                      : 'Track your achievements',
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.search_rounded),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_none_rounded),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.logout_rounded,
+                        color: AppTheme.errorRed,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none_rounded),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
+                      onPressed: () => LogoutHelper.logout(context),
+                      tooltip: 'Logout',
+                    ),
+                  ],
                 ),
+
+              // Content
               Expanded(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -140,113 +252,220 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildDrivesTab() {
     return Column(
       children: [
-        // Animated Filter Tabs
+        // 1. Horizontal Scrollable Tabs
         Container(
+          height: 60,
           color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: SingleChildScrollView(
+          child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: _drivesTabs.asMap().entries.map((entry) {
-                int index = entry.key;
-                String tab = entry.value;
-                bool isSelected = tab.startsWith(_drivesSelectedTab);
-
-                return Padding(
-                  padding: EdgeInsets.only(
-                    right: index < _drivesTabs.length - 1 ? 8 : 0,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: _tabs.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final tab = _tabs[index];
+              final isSelected = _selectedTab == tab;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedTab = tab;
+                    _applyFilters();
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 8,
                   ),
-                  child: _buildAnimatedFilterTab(tab, isSelected),
-                );
-              }).toList(),
-            ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.black87 : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        tab,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (tab == "Ongoing" || tab == "Upcoming") ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            tab == "Ongoing" ? "30" : "0", // Mock counts
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
 
-        // Drives List with Staggered Animation
-        Expanded(
-          child: _drives.isEmpty
-              ? _buildNoDataFound()
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: _drives.length,
-                  itemBuilder: (context, index) {
-                    final drive = _drives[index];
-                    return StaggeredFadeSlide(
-                      index: index,
-                      child: DriveCard(
-                        companyName: drive['company'],
-                        industry: drive['subtitle'],
-                        salary: drive['salary'],
-                        lastDate: drive['date'],
-                        status: drive['status'],
-                        statusColor: drive['statusColor'],
-                        statusBgColor: drive['statusBgColor'],
+        // 2. Sort and Filter Row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // Sort Dropdown
+              Expanded(
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedSort,
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
                       ),
-                    );
-                  },
+                      isExpanded: true,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      items: _sortOptions.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _selectedSort = newValue;
+                            _applyFilters();
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Filter Button
+              GestureDetector(
+                onTap: _showFilterModal,
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: const [
+                      Text(
+                        "Filter",
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(Icons.tune_rounded, size: 18),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 3. Drive List
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _filteredDrives.isEmpty
+              ? const NoDataWidget()
+              : RefreshIndicator(
+                  onRefresh: _loadDrives,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredDrives.length,
+                    itemBuilder: (context, index) {
+                      final drive = _filteredDrives[index];
+                      return EnhancedDriveCard(
+                        drive: drive,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DriveDetailScreen(drive: drive),
+                            ),
+                          );
+                        },
+                        onOptIn: () => _handleOptIn(drive),
+                        onOptOut: () => _handleOptOut(drive),
+                      );
+                    },
+                  ),
                 ),
         ),
       ],
     );
   }
 
-  Widget _buildAnimatedFilterTab(String tab, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _drivesSelectedTab = tab.split(' ')[0];
-        });
-      },
-      child: AnimatedContainer(
-        duration: AppTheme.normalDuration,
-        curve: AppTheme.defaultCurve,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.grey[100],
-          borderRadius: AppTheme.pillRadius,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          tab,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey[700],
-          ),
+  void _showFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: FilterModal(
+          onApply: () {
+            Navigator.pop(context);
+            // In a real app, you'd pass filter state back and re-apply
+          },
+          onClear: () {
+            // Clear filters logic
+          },
         ),
       ),
     );
   }
 
-  Widget _buildNoDataFound() {
-    return Center(
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0.0, end: 1.0),
-        duration: AppTheme.slowDuration,
-        curve: Curves.easeOut,
-        builder: (context, value, child) {
-          return Opacity(
-            opacity: value,
-            child: Transform.translate(
-              offset: Offset(0, 30 * (1 - value)),
-              child: child,
-            ),
-          );
-        },
-        child: const NoDataWidget(),
-      ),
-    );
+  void _handleOptIn(Drive drive) async {
+    await _driveService.optIn(drive.id);
+    _loadDrives(); // Reload to see status change
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Opted in to ${drive.companyName}')),
+      );
+    }
+  }
+
+  void _handleOptOut(Drive drive) async {
+    await _driveService.optOut(drive.id);
+    // Reload or manually update list if service was real
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Opted out of ${drive.companyName}')),
+      );
+    }
   }
 }

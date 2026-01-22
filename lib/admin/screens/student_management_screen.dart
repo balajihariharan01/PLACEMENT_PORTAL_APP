@@ -3,7 +3,6 @@ import '../../theme/app_theme.dart';
 import '../models/student.dart';
 import '../services/student_service.dart';
 import '../widgets/state_widgets.dart';
-import '../../widgets/app_logo.dart';
 import '../../widgets/home_back_button.dart';
 import 'student_form_screen.dart';
 import 'student_details_screen.dart';
@@ -109,25 +108,25 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
               const HomeBackButtonCard(),
               const SizedBox(width: 8),
               Flexible(
-                child: Row(
-                  children: [
-                    AppLogo.adaptive(
-                      context: context,
-                      height: isMobile ? 24 : 32,
+                child: ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [
+                      Color(0xFF2196F3),
+                      Color(0xFF4CAF50),
+                    ], // Blue to Green
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    'Students',
+                    style: TextStyle(
+                      fontSize: isMobile ? 18 : 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors
+                          .white, // ShaderMask requires white for gradient
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Students',
-                        style: TextStyle(
-                          fontSize: isMobile ? 18 : 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ],

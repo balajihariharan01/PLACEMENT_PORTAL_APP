@@ -4,7 +4,6 @@ import '../models/drive.dart';
 import '../services/drive_service.dart';
 import '../widgets/state_widgets.dart';
 import '../security/admin_route_guard.dart';
-import '../../widgets/app_logo.dart';
 import '../../widgets/home_back_button.dart';
 import 'drive_details_screen.dart';
 import 'package:intl/intl.dart';
@@ -139,20 +138,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
         children: [
           const HomeBackButtonCard(),
           const SizedBox(width: 8),
-          AppLogo.adaptive(context: context, height: isMobile ? 24 : 32),
-          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  isMobile ? 'Calendar' : 'Drive Calendar',
-                  style: TextStyle(
-                    fontSize: isMobile ? 16 : 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Color(0xFF2196F3), Color(0xFF4CAF50)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    isMobile ? 'Calendar' : 'Drive Calendar',
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
                 if (!isMobile)
                   const Text(
