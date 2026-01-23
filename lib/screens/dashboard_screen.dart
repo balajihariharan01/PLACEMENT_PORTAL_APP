@@ -54,6 +54,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     "Apply Date Descending",
   ];
 
+  // Active Filters from Filter Modal
+  Map<String, String?> _activeFilters = {};
+
   Future<bool> _handleBackPress() async {
     final now = DateTime.now();
     if (_lastBackPressTime == null ||
@@ -114,10 +117,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                   d.status != DriveStatus.closed &&
                   d.status != DriveStatus.notEligible,
             )
-            .toList(); // Simplified logic
+            .toList();
         break;
       case "Ongoing":
-        // Mock logic: All drives are essentially 'ongoing' in this demo unless closed
         temp = _allDrives
             .where(
               (d) =>
@@ -141,7 +143,86 @@ class _DashboardScreenState extends State<DashboardScreen>
             .toList();
         break;
       default:
-        temp = _allDrives; // Fallback
+        temp = _allDrives;
+    }
+
+    // Apply Active Filters from Filter Modal
+    if (_activeFilters.isNotEmpty) {
+      temp = temp.where((drive) {
+        // Status filter
+        if (_activeFilters['Status'] != null) {
+          final statusFilter = _activeFilters['Status']!;
+          bool matches = false;
+          switch (statusFilter) {
+            case 'Opted-In':
+              matches = drive.status == DriveStatus.applied;
+              break;
+            case 'Opted-Out':
+              matches = drive.status == DriveStatus.optedOut;
+              break;
+            case 'Placed':
+              matches = drive.status == DriveStatus.placed;
+              break;
+            case 'Eligible':
+              matches = drive.status == DriveStatus.eligible;
+              break;
+            case 'Not Eligible':
+              matches = drive.status == DriveStatus.notEligible;
+              break;
+          }
+          if (!matches) return false;
+        }
+
+        // Drive Type filter
+        if (_activeFilters['Drive Type'] != null) {
+          final driveType = _activeFilters['Drive Type']!;
+          if (driveType == 'On Campus' && !drive.isOnCampus) return false;
+          if (driveType == 'Off Campus' && drive.isOnCampus) return false;
+        }
+
+        // Company Domain filter
+        if (_activeFilters['Company Domain'] != null) {
+          final domain = _activeFilters['Company Domain']!;
+          if (drive.domain.toLowerCase() != domain.toLowerCase()) return false;
+        }
+
+        // Salary filter
+        if (_activeFilters['Salary'] != null) {
+          final salaryFilter = _activeFilters['Salary']!;
+          final salaryNum = _parseSalary(drive.salary);
+          bool matches = false;
+          switch (salaryFilter) {
+            case '0 - 3L PA':
+              matches = salaryNum >= 0 && salaryNum <= 3;
+              break;
+            case '3 - 5L PA':
+              matches = salaryNum > 3 && salaryNum <= 5;
+              break;
+            case '5 - 10L PA':
+              matches = salaryNum > 5 && salaryNum <= 10;
+              break;
+            case '> 10L PA':
+              matches = salaryNum > 10;
+              break;
+          }
+          if (!matches) return false;
+        }
+
+        // Drive Objective filter
+        if (_activeFilters['Drive Objective'] != null) {
+          final objective = _activeFilters['Drive Objective']!;
+          if (objective == 'Placement' &&
+              drive.jobType.toLowerCase().contains('internship')) {
+            return false;
+          }
+          if (objective == 'Academic Internship' &&
+              !drive.jobType.toLowerCase().contains('internship')) {
+            return false;
+          }
+        }
+
+        return true;
+      }).toList();
     }
 
     // Sorting
@@ -163,6 +244,16 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() {
       _filteredDrives = temp;
     });
+  }
+
+  double _parseSalary(String salary) {
+    // Extract numeric value from salary string like "4 LPA", "8L PA", etc.
+    final regex = RegExp(r'(\d+\.?\d*)');
+    final match = regex.firstMatch(salary);
+    if (match != null) {
+      return double.tryParse(match.group(1)!) ?? 0;
+    }
+    return 0;
   }
 
   void _onTabChanged(int index) {
@@ -437,12 +528,19 @@ class _DashboardScreenState extends State<DashboardScreen>
       builder: (context) => SizedBox(
         height: MediaQuery.of(context).size.height * 0.7,
         child: FilterModal(
-          onApply: () {
+          initialFilters: _activeFilters,
+          onApply: (filters) {
             Navigator.pop(context);
-            // In a real app, you'd pass filter state back and re-apply
+            setState(() {
+              _activeFilters = filters;
+              _applyFilters();
+            });
           },
           onClear: () {
-            // Clear filters logic
+            setState(() {
+              _activeFilters.clear();
+              _applyFilters();
+            });
           },
         ),
       ),
